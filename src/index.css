@@ -1,0 +1,192 @@
+:root {
+  --color-bg: #fdf2f8;
+  --color-primary: #ec4899;
+  --color-primary-dark: #db2777;
+  --color-surface: #ffffff;
+  --color-border: #fbcfe8;
+  --color-text: #4a044e;
+  --color-error: #e11d48;
+
+  font-family: system-ui, 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  background-color: var(--color-primary);
+  color: white;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+button:hover {
+  background-color: var(--color-primary-dark);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+input[type='email'],
+input[type='password'],
+input[type='text'] {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.6em;
+  font-size: 1em;
+  width: 100%;
+}
+
+/* ログイン画面 */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-form {
+  background-color: var(--color-surface);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(219, 39, 119, 0.15);
+  padding: 2.5em;
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  width: 100%;
+  max-width: 360px;
+}
+
+.login-form h1 {
+  margin: 0 0 0.5em;
+  color: var(--color-primary-dark);
+  text-align: center;
+}
+
+.login-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+  font-size: 0.9em;
+}
+
+.form-error {
+  color: var(--color-error);
+  font-size: 0.9em;
+}
+
+/* 共通レイアウト */
+.app-layout {
+  min-height: 100vh;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1em 2em;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.app-title {
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  text-decoration: none;
+  font-size: 1.2em;
+}
+
+.app-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.2em;
+}
+
+.app-nav a {
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.logout-button {
+  padding: 0.4em 1em;
+}
+
+.app-main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2em;
+}
+
+/* 資料作成ページ */
+.keyword-form {
+  display: flex;
+  gap: 1em;
+  align-items: flex-end;
+  margin-bottom: 1.5em;
+}
+
+.keyword-form label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+}
+
+.pattern-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6em;
+}
+
+.pattern-item {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 0.8em 1em;
+}
+
+/* 履歴ページ */
+.history-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5em;
+}
+
+.history-item {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 1.2em;
+}
+
+.history-keyword {
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  margin: 0 0 0.2em;
+}
+
+.history-date {
+  font-size: 0.8em;
+  color: #9d174d;
+  margin: 0 0 0.8em;
+}
