@@ -3,7 +3,6 @@ import type { FormEvent } from 'react'
 import { Layout } from '../components/Layout'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabaseClient'
-import { generatePatterns } from '../lib/generatePatterns'
 
 export function Dashboard() {
   const { session } = useAuth()
@@ -19,7 +18,19 @@ export function Dashboard() {
     setSubmitting(true)
     setErrorMessage(null)
 
-    const generated = generatePatterns(keyword)
+    // Gemini APIキーを扱うEdge Function経由でタイトル案を生成する
+    const { data, error: functionError } = await supabase.functions.invoke<{
+      patterns?: string[]
+      error?: string
+    }>('generate-patterns', { body: { keyword } })
+
+    if (functionError || !data?.patterns) {
+      setSubmitting(false)
+      setErrorMessage('資料の自動生成に失敗しました')
+      return
+    }
+
+    const generated = data.patterns
 
     const { error } = await supabase.from('generations').insert({
       user_id: session.user.id,
