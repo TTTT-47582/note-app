@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Layout } from '../components/Layout'
+import { ArticlePattern } from '../components/ArticlePattern'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabaseClient'
 
@@ -73,9 +74,7 @@ export function Dashboard() {
         {patterns.length > 0 && (
           <ul className="pattern-list">
             {patterns.map((pattern) => (
-              <li key={pattern} className="pattern-item">
-                {pattern}
-              </li>
+              <ArticlePattern key={pattern} content={pattern} />
             ))}
           </ul>
         )}

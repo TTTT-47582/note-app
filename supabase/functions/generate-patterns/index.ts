@@ -1,4 +1,4 @@
-// キーワードからnote資料タイトル案を複数パターン生成するEdge Function
+// キーワードからnoteにそのまま投稿できる記事本文を複数パターン生成するEdge Function
 // Gemini APIキーはSupabaseのシークレットとして保存し、クライアントには公開しない
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
@@ -53,10 +53,19 @@ Deno.serve(async (req) => {
       );
     }
 
+    const PATTERN_COUNT = 3;
+    const PATTERN_DELIMITER = "---PATTERN---";
+
     const prompt =
       `あなたはnote(note.com)のクリエイター向けアシスタントです。` +
-      `キーワード「${keyword}」を使ったnote記事のタイトル案を5個、日本語で提案してください。` +
-      `説明文は不要で、タイトルのみを1行ずつ出力してください。`;
+      `キーワード「${keyword}」を使って、noteにそのまま投稿できる完成した記事を${PATTERN_COUNT}パターン、日本語で作成してください。\n` +
+      `各記事は次の構成にしてください。\n` +
+      `1. 1行目に記事タイトル\n` +
+      `2. 読者の興味を引く導入文（2〜3文）\n` +
+      `3. 見出し付きの本文を2〜3セクション（見出しは「■」を先頭につける）\n` +
+      `4. まとめの段落\n\n` +
+      `${PATTERN_COUNT}パターンそれぞれの間は、必ず改行を挟んで "${PATTERN_DELIMITER}" という区切り文字だけの行を入れてください。` +
+      `それ以外の説明文・前置き・番号付けは一切出力せず、記事本文のみを出力してください。`;
 
     const geminiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
@@ -65,6 +74,7 @@ Deno.serve(async (req) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 4096 },
         }),
       },
     );
@@ -80,10 +90,10 @@ Deno.serve(async (req) => {
     const geminiData = await geminiResponse.json();
     const rawText: string = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
     const patterns = rawText
-      .split("\n")
-      .map((line: string) => line.replace(/^[\s\-*\d.]+/, "").trim())
-      .filter((line: string) => line.length > 0)
-      .slice(0, 5);
+      .split(PATTERN_DELIMITER)
+      .map((article: string) => article.trim())
+      .filter((article: string) => article.length > 0)
+      .slice(0, PATTERN_COUNT);
 
     return new Response(JSON.stringify({ patterns }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

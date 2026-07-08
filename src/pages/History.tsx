@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Layout } from '../components/Layout'
+import { ArticlePattern } from '../components/ArticlePattern'
 import { supabase } from '../lib/supabaseClient'
 import type { Generation } from '../types/generation'
 
@@ -45,9 +46,7 @@ export function History() {
               </p>
               <ul className="pattern-list">
                 {generation.patterns.map((pattern) => (
-                  <li key={pattern} className="pattern-item">
-                    {pattern}
-                  </li>
+                  <ArticlePattern key={pattern} content={pattern} />
                 ))}
               </ul>
             </li>
