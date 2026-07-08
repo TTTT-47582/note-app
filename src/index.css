@@ -91,6 +91,16 @@ input[type='text'] {
   font-size: 0.9em;
 }
 
+.form-footer-link {
+  text-align: center;
+  font-size: 0.85em;
+  margin: 0;
+}
+
+.form-footer-link a {
+  color: var(--color-primary-dark);
+}
+
 /* 共通レイアウト */
 .app-layout {
   min-height: 100vh;
