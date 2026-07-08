@@ -4,6 +4,62 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 const GEMINI_MODEL = "gemini-2.5-flash";
+const GEMINI_IMAGE_MODEL = "gemini-2.5-flash-image";
+const IMAGE_BUCKET = "generated-images";
+
+// キーワードからAI画像を1枚生成し、Supabase Storageにアップロードして公開URLを返す（課金対象）
+async function generateAndUploadImage(
+  keyword: string,
+  userId: string,
+): Promise<string | null> {
+  const imagePrompt =
+    `note記事のアイキャッチ用イラストを1枚生成してください。テーマ：「${keyword}」。` +
+    `温かみのある水彩画風のイラストで、横長の構図にしてください。文字は入れないでください。`;
+
+  const imageResponse = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_IMAGE_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contents: [{ parts: [{ text: imagePrompt }] }] }),
+    },
+  );
+
+  if (!imageResponse.ok) {
+    throw new Error(`Gemini画像生成に失敗しました: ${await imageResponse.text()}`);
+  }
+
+  const imageData = await imageResponse.json();
+  const parts = imageData.candidates?.[0]?.content?.parts ?? [];
+  const imagePart = parts.find((part: { inlineData?: { data?: string } }) => part.inlineData?.data);
+  const base64Image: string | undefined = imagePart?.inlineData?.data;
+  if (!base64Image) {
+    throw new Error("Gemini画像生成のレスポンスに画像データが含まれていません");
+  }
+
+  const imageBytes = Uint8Array.from(atob(base64Image), (c) => c.charCodeAt(0));
+
+  // ストレージへのアップロードはservice roleで行い、RLSの制約を受けずに書き込む
+  const supabaseAdmin = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+
+  const filePath = `${userId}/${crypto.randomUUID()}.png`;
+  const { error: uploadError } = await supabaseAdmin.storage
+    .from(IMAGE_BUCKET)
+    .upload(filePath, imageBytes, { contentType: "image/png" });
+
+  if (uploadError) {
+    throw new Error(`画像のアップロードに失敗しました: ${uploadError.message}`);
+  }
+
+  const { data: publicUrlData } = supabaseAdmin.storage
+    .from(IMAGE_BUCKET)
+    .getPublicUrl(filePath);
+
+  return publicUrlData.publicUrl;
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,7 +94,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { keyword } = await req.json();
+    const { keyword, useAiImage } = await req.json();
     if (!keyword || typeof keyword !== "string") {
       return new Response(JSON.stringify({ error: "keywordが必要です" }), {
         status: 400,
@@ -95,7 +151,17 @@ Deno.serve(async (req) => {
       .filter((article: string) => article.length > 0)
       .slice(0, PATTERN_COUNT);
 
-    return new Response(JSON.stringify({ patterns }), {
+    let imageUrl: string | null = null;
+    let imageError: string | null = null;
+    if (useAiImage) {
+      try {
+        imageUrl = await generateAndUploadImage(keyword, userData.user.id);
+      } catch (err) {
+        imageError = err instanceof Error ? err.message : String(err);
+      }
+    }
+
+    return new Response(JSON.stringify({ patterns, imageUrl, imageError }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {

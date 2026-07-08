@@ -4,5 +4,6 @@ export type Generation = {
   user_id: string
   keyword: string
   patterns: string[]
+  image_url: string | null
   created_at: string
 }

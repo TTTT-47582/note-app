@@ -45,7 +45,11 @@ export function History() {
               <p className="history-date">
                 {new Date(generation.created_at).toLocaleString('ja-JP')}
               </p>
-              <RandomIllustration seed={generation.id} />
+              {generation.image_url ? (
+                <img src={generation.image_url} alt="" className="ai-image" />
+              ) : (
+                <RandomIllustration seed={generation.id} />
+              )}
               <ul className="pattern-list">
                 {generation.patterns.map((pattern) => (
                   <ArticlePattern key={pattern} content={pattern} />

@@ -6,10 +6,14 @@ import { RandomIllustration } from '../components/illustrations'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabaseClient'
 
+type ImageMode = 'free' | 'ai'
+
 export function Dashboard() {
   const { session } = useAuth()
   const [keyword, setKeyword] = useState('')
+  const [imageMode, setImageMode] = useState<ImageMode>('free')
   const [patterns, setPatterns] = useState<string[]>([])
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -20,11 +24,13 @@ export function Dashboard() {
     setSubmitting(true)
     setErrorMessage(null)
 
-    // Gemini APIキーを扱うEdge Function経由で記事本文を生成する
+    // Gemini APIキーを扱うEdge Function経由で記事本文（と必要ならAI画像）を生成する
     const { data, error: functionError } = await supabase.functions.invoke<{
       patterns?: string[]
+      imageUrl?: string | null
+      imageError?: string | null
       error?: string
-    }>('generate-patterns', { body: { keyword } })
+    }>('generate-patterns', { body: { keyword, useAiImage: imageMode === 'ai' } })
 
     if (functionError || !data?.patterns) {
       setSubmitting(false)
@@ -33,11 +39,13 @@ export function Dashboard() {
     }
 
     const generated = data.patterns
+    const generatedImageUrl = data.imageUrl ?? null
 
     const { error } = await supabase.from('generations').insert({
       user_id: session.user.id,
       keyword,
       patterns: generated,
+      image_url: generatedImageUrl,
     })
 
     setSubmitting(false)
@@ -48,6 +56,15 @@ export function Dashboard() {
     }
 
     setPatterns(generated)
+    setImageUrl(generatedImageUrl)
+
+    if (imageMode === 'ai' && !generatedImageUrl) {
+      setErrorMessage(
+        data.imageError
+          ? `AI画像生成に失敗しました（${data.imageError}）。無料イラストを表示します`
+          : 'AI画像生成に失敗しました。無料イラストを表示します',
+      )
+    }
   }
 
   return (
@@ -70,11 +87,39 @@ export function Dashboard() {
           </button>
         </form>
 
+        <fieldset className="image-mode-fieldset">
+          <legend>画像の種類</legend>
+          <label className="image-mode-option">
+            <input
+              type="radio"
+              name="imageMode"
+              value="free"
+              checked={imageMode === 'free'}
+              onChange={() => setImageMode('free')}
+            />
+            無料イラスト
+          </label>
+          <label className="image-mode-option">
+            <input
+              type="radio"
+              name="imageMode"
+              value="ai"
+              checked={imageMode === 'ai'}
+              onChange={() => setImageMode('ai')}
+            />
+            AI生成画像（少額課金）
+          </label>
+        </fieldset>
+
         {errorMessage && <p className="form-error">{errorMessage}</p>}
 
         {patterns.length > 0 && (
           <>
-            <RandomIllustration seed={keyword} />
+            {imageUrl ? (
+              <img src={imageUrl} alt="" className="ai-image" />
+            ) : (
+              <RandomIllustration seed={keyword} />
+            )}
             <ul className="pattern-list">
               {patterns.map((pattern) => (
                 <ArticlePattern key={pattern} content={pattern} />
