@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Layout } from '../components/Layout'
 import { ArticlePattern } from '../components/ArticlePattern'
+import { RandomIllustration } from '../components/illustrations'
 import { supabase } from '../lib/supabaseClient'
 import type { Generation } from '../types/generation'
 
@@ -44,6 +45,7 @@ export function History() {
               <p className="history-date">
                 {new Date(generation.created_at).toLocaleString('ja-JP')}
               </p>
+              <RandomIllustration seed={generation.id} />
               <ul className="pattern-list">
                 {generation.patterns.map((pattern) => (
                   <ArticlePattern key={pattern} content={pattern} />

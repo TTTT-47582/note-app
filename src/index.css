@@ -158,6 +158,19 @@ input[type='text'] {
   gap: 0.4em;
 }
 
+.illustration {
+  margin: 0 0 1.2em;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(219, 39, 119, 0.12);
+}
+
+.illustration svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 .pattern-list {
   list-style: none;
   padding: 0;

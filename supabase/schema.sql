@@ -11,9 +11,11 @@ create table if not exists generations (
 
 alter table generations enable row level security;
 
--- 自分が作成した履歴のみ参照・追加できるようにする
+-- 自分が作成した履歴のみ参照・追加できるようにする（再実行できるよう一度削除してから作成する）
+drop policy if exists "generations_select_own" on generations;
 create policy "generations_select_own" on generations
   for select using (auth.uid() = user_id);
 
+drop policy if exists "generations_insert_own" on generations;
 create policy "generations_insert_own" on generations
   for insert with check (auth.uid() = user_id);

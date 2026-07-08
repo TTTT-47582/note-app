@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Layout } from '../components/Layout'
 import { ArticlePattern } from '../components/ArticlePattern'
+import { RandomIllustration } from '../components/illustrations'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabaseClient'
 
@@ -19,7 +20,7 @@ export function Dashboard() {
     setSubmitting(true)
     setErrorMessage(null)
 
-    // Gemini APIキーを扱うEdge Function経由でタイトル案を生成する
+    // Gemini APIキーを扱うEdge Function経由で記事本文を生成する
     const { data, error: functionError } = await supabase.functions.invoke<{
       patterns?: string[]
       error?: string
@@ -72,11 +73,14 @@ export function Dashboard() {
         {errorMessage && <p className="form-error">{errorMessage}</p>}
 
         {patterns.length > 0 && (
-          <ul className="pattern-list">
-            {patterns.map((pattern) => (
-              <ArticlePattern key={pattern} content={pattern} />
-            ))}
-          </ul>
+          <>
+            <RandomIllustration seed={keyword} />
+            <ul className="pattern-list">
+              {patterns.map((pattern) => (
+                <ArticlePattern key={pattern} content={pattern} />
+              ))}
+            </ul>
+          </>
         )}
       </div>
     </Layout>
